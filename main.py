@@ -1,32 +1,31 @@
 from bs4 import BeautifulSoup
 from pathlib import Path
 import argparse
+import pandas as pd
 
 
-def _kml_to_list(file):
-    print('_kml_to_list: ' + file)
-    kml = []
-    with open(file, 'r') as f:
+def _kml_to_df(file_name):
+    print('_kml_to_df: ' + file_name)
+    kml_df = pd.DataFrame(columns=['Longitude', 'Latitude', 'Altitude', 'Name'])
+
+    with open(file_name, 'r') as f:
         contents = f.read()
         kml_soup = BeautifulSoup(contents, 'xml')
 
         # Placemark
         placemarks = kml_soup.select('Folder Placemark')
-        for placemark in placemarks:
-            pm_name = placemark.find('name').getText().replace(',', '')
+        for index, placemark in enumerate(placemarks):
+            pm_name = placemark.find('name').getText().replace(',', ';')
             pm_coordinates = placemark.find('coordinates').getText()
-            pm_item = pm_name + ',' + pm_coordinates + '\n'
-            kml.append(pm_item)
-    return kml
+            pm_item = pm_coordinates + ',' + pm_name
+            pm_item_list = pm_item.split(',')
+            kml_df.loc[index] = pm_item_list
+    return kml_df
 
 
-def _write_csv(name, rows):
-    print('_write_csv: ' + name)
-    csv_header = '\ufeff' + name.replace('.csv', '') + ',X,Y,Z' + '\n'
-    with open(name, mode='w', encoding='utf-16le') as f:
-        f.write(csv_header)
-        for row in rows:
-            f.write(row)
+def _write_excel_from_df(df, file_name):
+    print('_write_excel_from_df: ' + file_name)
+    df.to_excel(file_name, sheet_name='Hoja 1')
 
 
 def main():
@@ -41,9 +40,8 @@ def main():
 
     for file in file_list:
         if (file.find('.kml') != -1 and Path(file).is_file()):
-            kml = _kml_to_list(file)
-            csv_name = file.replace('.kml', '.csv')
-            _write_csv(csv_name, kml)
+            klm_df = _kml_to_df(file)
+            _write_excel_from_df(klm_df, file.replace('.kml', '.xls'))
 
 
 if __name__ == '__main__':
