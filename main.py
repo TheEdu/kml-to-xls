@@ -6,11 +6,26 @@ import pandas as pd
 
 def _kml_to_df(file_name):
     print('_kml_to_df: ' + file_name)
-    kml_df = pd.DataFrame(columns=['Longitude', 'Latitude', 'Altitude', 'Name'])
+    kml_df = pd.DataFrame(columns=['Longitude', 'Latitude', 'Altitude', 'Name', 'Folder'])
+    kml_df_index = 0
 
     with open(file_name, 'r') as f:
         contents = f.read()
         kml_soup = BeautifulSoup(contents, 'xml')
+        folders = kml_soup.select('Folder')
+        for folder in folders:
+            folder_name = folder.find('name').getText()
+            placemarks = folder.find_all('Placemark')
+            for placemark in placemarks:
+                point = placemark.find('Point')
+                if point is not None:
+                    name = placemark.find('name').getText()
+                    coordinates = point.find('coordinates').getText().split(',')
+                    kml_df.loc[kml_df_index, 'Folder'] = folder_name
+                    kml_df.loc[kml_df_index, 'Name'] = name
+                    kml_df.loc[kml_df_index, 'Longitude':'Altitude'] = coordinates
+                    kml_df_index += 1
+        return kml_df
 
         # Placemark
         placemarks = kml_soup.select('Folder Placemark')
@@ -25,7 +40,7 @@ def _kml_to_df(file_name):
 
 def _write_excel_from_df(df, file_name):
     print('_write_excel_from_df: ' + file_name)
-    df.to_excel(file_name, sheet_name='Hoja 1')
+    df.to_excel(file_name, sheet_name='Hoja1')
 
 
 def main():
