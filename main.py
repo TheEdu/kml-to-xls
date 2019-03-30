@@ -25,16 +25,6 @@ def _kml_to_df(file_name):
                     kml_df.loc[kml_df_index, 'Name'] = name
                     kml_df.loc[kml_df_index, 'Longitude':'Altitude'] = coordinates
                     kml_df_index += 1
-        return kml_df
-
-        # Placemark
-        placemarks = kml_soup.select('Folder Placemark')
-        for index, placemark in enumerate(placemarks):
-            pm_name = placemark.find('name').getText().replace(',', ';')
-            pm_coordinates = placemark.find('coordinates').getText()
-            pm_item = pm_coordinates + ',' + pm_name
-            pm_item_list = pm_item.split(',')
-            kml_df.loc[index] = pm_item_list
     return kml_df
 
 
